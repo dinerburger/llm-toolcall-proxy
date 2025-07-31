@@ -84,8 +84,18 @@ class GLMToolCallConverter(ToolCallConverter):
             
             arguments = {}
             for arg_key, arg_value in arg_matches:
-                arguments[arg_key.strip()] = arg_value.strip()
-                print(f"[DEBUG] Argument: {arg_key.strip()} = {arg_value.strip()}")
+                key = arg_key.strip()
+                value = arg_value.strip()
+                
+                # Try to parse arg_value as JSON first
+                try:
+                    parsed_value = json.loads(value)
+                    arguments[key] = parsed_value
+                    print(f"[DEBUG] Argument (JSON): {key} = {parsed_value} (type: {type(parsed_value)})")
+                except json.JSONDecodeError:
+                    # If not valid JSON, use as string
+                    arguments[key] = value
+                    print(f"[DEBUG] Argument (string): {key} = {value}")
             
             tool_call = {
                 "id": str(hash(f"{function_name}_{i}_{len(tool_calls)}") % 1000000000),
