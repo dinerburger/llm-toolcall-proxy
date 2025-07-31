@@ -47,6 +47,11 @@ class ToolCallConverter(ABC):
                 
             content = message['content']
             if not self.has_partial_tool_call(content):
+                # Still apply common cleanup even if no tool calls
+                content = self._remove_empty_think_tags(content)
+                if content != message['content']:
+                    message['content'] = content
+                    modified = True
                 continue
             
             # Parse tool calls from content
@@ -55,6 +60,8 @@ class ToolCallConverter(ABC):
             if tool_calls:
                 # Remove tool call text from content
                 clean_content = self._clean_content(content)
+                # Apply common cleanup
+                clean_content = self._remove_empty_think_tags(clean_content)
                 
                 # Update message format
                 message['tool_calls'] = tool_calls
@@ -65,6 +72,17 @@ class ToolCallConverter(ABC):
                 modified = True
         
         return response_data
+    
+    def _remove_empty_think_tags(self, content: str) -> str:
+        """Remove empty <think></think> tags from content (common cleanup)"""
+        if not content:
+            return content
+            
+        # Remove empty think tags with any amount of whitespace inside
+        # This handles: <think></think>, <think> </think>, <think>\n</think>, etc.
+        content = re.sub(r'<think>\s*</think>', '', content, flags=re.DOTALL)
+        
+        return content
     
     @abstractmethod
     def _clean_content(self, content: str) -> str:
@@ -128,6 +146,8 @@ class StreamingToolCallHandler(ABC):
         
         # Clean content
         clean_content = self.converter._clean_content(self.buffer)
+        # Apply common cleanup
+        clean_content = self.converter._remove_empty_think_tags(clean_content)
         
         # Create tool call chunk
         chunk = {
@@ -190,4 +210,5 @@ class PassThroughConverter(ToolCallConverter):
         return False  # No tool call detection
     
     def _clean_content(self, content: str) -> str:
-        return content  # No cleaning needed
+        # Even pass-through converter should clean empty think tags
+        return self._remove_empty_think_tags(content)
