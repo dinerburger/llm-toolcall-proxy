@@ -153,6 +153,11 @@ class ProxyHandler:
                 handler = None
                 
                 for line in response.iter_lines(decode_unicode=True):
+                    if not line:
+                        # Keep empty lines for proper SSE format
+                        yield '\n'
+                        continue
+                        
                     if line.startswith('data: '):
                         data = line[6:]  # Remove 'data: ' prefix
                         
@@ -179,21 +184,37 @@ class ProxyHandler:
                                 yield f"data: {json.dumps(processed_chunk)}\n\n"
                                 
                         except json.JSONDecodeError:
-                            # Pass through non-JSON data
-                            yield line + '\n'
+                            # Pass through non-JSON data with proper SSE format
+                            yield f"{line}\n\n"
                     else:
-                        # Pass through non-data lines
-                        yield line + '\n'
+                        # Pass through non-data lines (comments, etc.) with proper format
+                        yield f"{line}\n\n"
             else:
                 # Simple passthrough for non-tool-call streaming
+                # Ensure proper SSE format is maintained
                 for line in response.iter_lines(decode_unicode=True):
-                    yield line + '\n'
+                    if not line:
+                        # Keep empty lines for proper SSE format
+                        yield '\n'
+                    else:
+                        # Pass through all lines exactly as received from backend
+                        # Backend already provides proper SSE format
+                        yield f"{line}\n\n"
+        
+        # Set proper headers for SSE streaming
+        headers = {
+            'Content-Type': 'text/event-stream',
+            'Cache-Control': 'no-cache',
+            'Connection': 'keep-alive',
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Headers': 'Content-Type',
+        }
         
         return Response(
             generate(),
             status=response.status_code,
-            headers=dict(response.headers),
-            mimetype='text/plain'
+            headers=headers,
+            mimetype='text/event-stream'
         )
 
 # Initialize proxy handler
