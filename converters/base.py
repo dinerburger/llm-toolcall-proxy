@@ -59,6 +59,8 @@ class ToolCallConverter(ABC):
                 # Update message format
                 message['tool_calls'] = tool_calls
                 message['content'] = clean_content if clean_content else None
+                if (message['content'] is None) or len(message['content'].strip()) == 0:
+                    del message['content']
                 choice['finish_reason'] = 'tool_calls'
                 modified = True
         

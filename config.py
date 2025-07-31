@@ -29,6 +29,9 @@ class Config:
         # Tool call conversion settings
         self.ENABLE_TOOL_CALL_CONVERSION = os.getenv('ENABLE_TOOL_CALL_CONVERSION', 'true').lower() == 'true'
         
+        # Content filtering settings
+        self.REMOVE_THINK_TAGS = os.getenv('REMOVE_THINK_TAGS', 'true').lower() == 'true'
+        
         # Logging settings
         self.LOG_LEVEL = os.getenv('LOG_LEVEL', 'INFO').upper()
     

@@ -114,6 +114,7 @@ I'll search for that information.
 | `PROXY_PORT` | `5000` | Proxy server port |
 | `REQUEST_TIMEOUT` | `300` | Request timeout (seconds) |
 | `ENABLE_TOOL_CALL_CONVERSION` | `true` | Enable/disable tool call conversion |
+| `REMOVE_THINK_TAGS` | `true` | Remove complete `<think>...</think>` blocks from responses |
 | `LOG_LEVEL` | `INFO` | Logging level |
 | `FLASK_ENV` | `development` | Environment (development/production/testing) |
 
@@ -127,6 +128,7 @@ BACKEND_HOST = 'localhost'
 BACKEND_PORT = 8888
 PROXY_PORT = 5000
 ENABLE_TOOL_CALL_CONVERSION = True
+REMOVE_THINK_TAGS = True  # Set to False to preserve <think> content
 ```
 
 ### Predefined Backend Configurations
@@ -316,6 +318,34 @@ We welcome contributions for new model formats! Please:
 ## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🧠 Think Tag Processing
+
+The proxy server can handle GLM model `<think>` tags for better response formatting:
+
+### Configuration
+Set `REMOVE_THINK_TAGS` environment variable to control behavior:
+
+- `REMOVE_THINK_TAGS=true` (default): Remove complete `<think>...</think>` blocks
+- `REMOVE_THINK_TAGS=false`: Preserve `<think>` content for debugging/transparency
+
+### Examples
+
+**With REMOVE_THINK_TAGS=true (default):**
+```
+Input:  "I need to analyze this. <think>Let me think step by step...</think> Here's my answer."
+Output: "I need to analyze this.  Here's my answer."
+```
+
+**With REMOVE_THINK_TAGS=false:**
+```
+Input:  "I need to analyze this. <think>Let me think step by step...</think> Here's my answer."
+Output: "I need to analyze this. Let me think step by step... Here's my answer."
+```
+
+**Note:** Malformed/orphaned think tags are always cleaned up regardless of the setting:
+- `</think>` without opening tag → removed
+- `<think>` without closing tag → removed
 
 ## 🙏 Acknowledgments
 
