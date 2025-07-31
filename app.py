@@ -99,14 +99,18 @@ class ProxyHandler:
             headers = dict(request.headers)
             headers.pop('Host', None)
             
-            # Forward request
+            # Forward request with appropriate timeout
+            timeout = config.STREAMING_TIMEOUT if stream else config.REQUEST_TIMEOUT
+            
+            print(f"[DEBUG] Making {'streaming' if stream else 'regular'} request with timeout: {timeout}")
+            
             response = requests.request(
                 method=request.method,
                 url=url,
                 headers=headers,
                 data=request.get_data(),
                 stream=stream,
-                timeout=config.REQUEST_TIMEOUT
+                timeout=timeout
             )
             
             if stream:

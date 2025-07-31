@@ -112,7 +112,8 @@ I'll search for that information.
 | `BACKEND_PROTOCOL` | `http` | Backend protocol |
 | `PROXY_HOST` | `0.0.0.0` | Proxy server bind address |
 | `PROXY_PORT` | `5000` | Proxy server port |
-| `REQUEST_TIMEOUT` | `300` | Request timeout (seconds) |
+| `REQUEST_TIMEOUT` | `3600` | Regular request timeout (seconds) |
+| `STREAMING_TIMEOUT` | `3600` | Streaming request timeout (seconds, use 'none' to disable) |
 | `ENABLE_TOOL_CALL_CONVERSION` | `true` | Enable/disable tool call conversion |
 | `REMOVE_THINK_TAGS` | `true` | Remove complete `<think>...</think>` blocks from responses |
 | `LOG_LEVEL` | `INFO` | Logging level |
@@ -346,6 +347,47 @@ Output: "I need to analyze this. Let me think step by step... Here's my answer."
 **Note:** Malformed/orphaned think tags are always cleaned up regardless of the setting:
 - `</think>` without opening tag → removed
 - `<think>` without closing tag → removed
+
+## ⏱️ Timeout Configuration
+
+The proxy server supports different timeout settings for regular and streaming requests:
+
+### Environment Variables
+
+- `REQUEST_TIMEOUT=3600`: Regular request timeout (60 minutes)
+- `STREAMING_TIMEOUT=3600`: Streaming request timeout (60 minutes)
+
+### Disable Streaming Timeout
+
+For long-running streaming requests, you can disable the timeout:
+
+```bash
+export STREAMING_TIMEOUT=none
+# or
+export STREAMING_TIMEOUT=0
+# or 
+export STREAMING_TIMEOUT=false
+```
+
+### Usage Examples
+
+**Short timeout for quick responses:**
+```bash
+export REQUEST_TIMEOUT=30
+export STREAMING_TIMEOUT=120
+```
+
+**No timeout for long streaming sessions:**
+```bash
+export REQUEST_TIMEOUT=3600
+export STREAMING_TIMEOUT=none
+```
+
+**Note:** Disabling streaming timeout is useful for:
+- Long document generation
+- Complex reasoning tasks
+- Large dataset processing
+- Extended conversations
 
 ## 🙏 Acknowledgments
 

@@ -21,7 +21,15 @@ class Config:
         self.PROXY_PORT = int(os.getenv('PROXY_PORT', '5000'))
         
         # Request timeout settings
-        self.REQUEST_TIMEOUT = int(os.getenv('REQUEST_TIMEOUT', '300'))
+        self.REQUEST_TIMEOUT = int(os.getenv('REQUEST_TIMEOUT', '3600'))  # Default 60 minutes
+        
+        # Streaming timeout settings
+        self.STREAMING_TIMEOUT = os.getenv('STREAMING_TIMEOUT', '3600')  # Default 60 minutes
+        # Set to 'None' or '0' to disable timeout for streaming
+        if self.STREAMING_TIMEOUT.lower() in ['none', 'null', '0', 'false']:
+            self.STREAMING_TIMEOUT = None
+        else:
+            self.STREAMING_TIMEOUT = int(self.STREAMING_TIMEOUT)
         
         # Debug settings
         self.DEBUG = os.getenv('DEBUG', 'true').lower() == 'true'
