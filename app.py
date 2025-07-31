@@ -152,21 +152,28 @@ class ProxyHandler:
             if convert_tool_calls:
                 handler = None
                 
-                for line in response.iter_lines(decode_unicode=True):
+                for line in response.iter_lines(decode_unicode=False):
                     if not line:
                         # Keep empty lines for proper SSE format
                         yield '\n'
                         continue
+                    
+                    # Decode bytes to UTF-8 string properly
+                    try:
+                        decoded_line = line.decode('utf-8')
+                    except UnicodeDecodeError:
+                        # Fallback to latin-1 if UTF-8 fails
+                        decoded_line = line.decode('latin-1')
                         
-                    if line.startswith('data: '):
-                        data = line[6:]  # Remove 'data: ' prefix
+                    if decoded_line.startswith('data: '):
+                        data = decoded_line[6:]  # Remove 'data: ' prefix
                         
                         if data.strip() == '[DONE]':
                             # Finalize handler and send any remaining chunks
                             if handler:
                                 final_chunk = handler.finalize()
                                 if final_chunk:
-                                    yield f"data: {json.dumps(final_chunk)}\n\n"
+                                    yield f"data: {json.dumps(final_chunk, ensure_ascii=False)}\n\n"
                             yield "data: [DONE]\n\n"
                             break
                         
@@ -181,25 +188,30 @@ class ProxyHandler:
                             processed_chunk = handler.process_chunk(chunk_data)
                             
                             if processed_chunk:
-                                yield f"data: {json.dumps(processed_chunk)}\n\n"
+                                yield f"data: {json.dumps(processed_chunk, ensure_ascii=False)}\n\n"
                                 
                         except json.JSONDecodeError:
                             # Pass through non-JSON data with proper SSE format
-                            yield f"{line}\n\n"
+                            yield f"{decoded_line}\n\n"
                     else:
                         # Pass through non-data lines (comments, etc.) with proper format
-                        yield f"{line}\n\n"
+                        yield f"{decoded_line}\n\n"
             else:
                 # Simple passthrough for non-tool-call streaming
                 # Ensure proper SSE format is maintained
-                for line in response.iter_lines(decode_unicode=True):
+                for line in response.iter_lines(decode_unicode=False):
                     if not line:
                         # Keep empty lines for proper SSE format
                         yield '\n'
                     else:
-                        # Pass through all lines exactly as received from backend
-                        # Backend already provides proper SSE format
-                        yield f"{line}\n\n"
+                        # Decode bytes to UTF-8 string properly
+                        try:
+                            decoded_line = line.decode('utf-8')
+                            yield f"{decoded_line}\n\n"
+                        except UnicodeDecodeError:
+                            # Fallback to latin-1 if UTF-8 fails
+                            decoded_line = line.decode('latin-1')
+                            yield f"{decoded_line}\n\n"
         
         # Set proper headers for SSE streaming
         headers = {
