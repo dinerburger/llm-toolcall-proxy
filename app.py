@@ -262,11 +262,6 @@ def health():
     """Health check endpoint"""
     return jsonify({"status": "healthy", "service": "chat-proxy"})
 
-@app.route('/v1/models', methods=['GET'])
-def models():
-    """List available models"""
-    return proxy.forward_request('/v1/models')
-
 @app.route('/v1/completions', methods=['POST'])
 def completions():
     """Handle text completions requests (non-chat)"""
@@ -274,9 +269,7 @@ def completions():
         # Check if streaming is requested
         request_data = request.get_json()
         stream = request_data.get('stream', False) if request_data else False
-        
         return proxy.forward_request('/v1/completions', stream=stream)
-        
     except Exception as e:
         logger.error(f"Completions error: {e}")
         return jsonify({"error": "Request processing failed"}), 500
@@ -286,20 +279,35 @@ def embeddings():
     """Handle embeddings requests"""
     try:
         return proxy.forward_request('/v1/embeddings')
-        
     except Exception as e:
         logger.error(f"Embeddings error: {e}")
         return jsonify({"error": "Request processing failed"}), 500
 
-@app.route('/v1/<path:path>', methods=['GET', 'POST', 'PUT', 'DELETE', 'PATCH'])
-def proxy_v1(path):
-    """Proxy all /v1/* requests transparently"""
-    return proxy.forward_request(f'/v1/{path}')
-
 @app.route('/<path:path>', methods=['GET', 'POST', 'PUT', 'DELETE', 'PATCH'])
 def proxy_all(path):
-    """Proxy all other requests transparently"""
-    return proxy.forward_request(f'/{path}')
+    # Construct the full URL for the backend request
+    url = f"{config.backend_url}/{path}"
+
+    # Forward the request to the backend server
+    # stream=True is important for handling large responses efficiently
+    resp = requests.request(
+        method=request.method,
+        url=url,
+        headers={key: value for (key, value) in request.headers if key != 'Host'},
+        data=request.get_data(),
+        cookies=request.cookies,
+        allow_redirects=False,
+        stream=True
+    )
+
+    # Exclude certain headers that should not be forwarded
+    excluded_headers = ['content-encoding', 'content-length', 'transfer-encoding', 'connection']
+    headers = [(name, value) for (name, value) in resp.raw.headers.items()
+               if name.lower() not in excluded_headers]
+
+    # Create a new Flask response object from the backend's response
+    response = Response(resp.content, resp.status_code, headers)
+    return response
 
 if __name__ == '__main__':
     logger.info(f"Starting proxy server on {config.PROXY_HOST}:{config.PROXY_PORT}")
