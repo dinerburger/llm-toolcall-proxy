@@ -23,7 +23,7 @@ from config import Config
 class Qwen3ToolCallConverter(ToolCallConverter):
     """Convert Qwen3 tool calls to the standard OpenAI format."""
 
-    QWEN3_MODEL_PATTERNS = [r"qwen3", r"qwen3-.*"]
+    QWEN3_MODEL_PATTERNS = [r".*qwen3.*", r".*jan[-_]nano.*"]
 
     def __init__(self):
         self.config = Config()
