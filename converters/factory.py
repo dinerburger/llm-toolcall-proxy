@@ -9,6 +9,7 @@ from .glm import GLMToolCallConverter, GLMStreamingHandler
 from .openai import OpenAIToolCallConverter, OpenAIStreamingHandler
 from .claude import ClaudeToolCallConverter, ClaudeStreamingHandler
 from .qwen3_coder import Qwen3CoderToolCallConverter, Qwen3CoderStreamingHandler
+from .qwen3 import Qwen3ToolCallConverter, Qwen3StreamingHandler
 
 
 class ConverterFactory:
@@ -17,11 +18,13 @@ class ConverterFactory:
     def __init__(self):
         # Register available converters (order matters – most specific first)
         self._converters = [
+            # Coder comes first, the match is more specific
             Qwen3CoderToolCallConverter(),
+            # Generic Qwen3 converter for XML-wrapped JSON calls
+            Qwen3ToolCallConverter(),
             GLMToolCallConverter(),
             OpenAIToolCallConverter(),
             ClaudeToolCallConverter(),
-            # Register Qwen3 Coder after the known converters
             PassThroughConverter(),  # Fallback – should be last
         ]
     
@@ -44,6 +47,8 @@ class ConverterFactory:
         # Return model-specific streaming handler if available
         if isinstance(converter, Qwen3CoderToolCallConverter):
             return Qwen3CoderStreamingHandler()
+        elif isinstance(converter, Qwen3ToolCallConverter):
+            return Qwen3StreamingHandler()
         elif isinstance(converter, GLMToolCallConverter):
             return GLMStreamingHandler()
         elif isinstance(converter, OpenAIToolCallConverter):
