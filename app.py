@@ -29,7 +29,7 @@ logger = logging.getLogger(__name__)
 class ToolCallConverter:
     """Legacy converter - now delegates to modular system"""
     
-    def __init__(self, model_name: str = None):
+    def __init__(self, model_name: Optional[str] = None):
         self.model_name = model_name
         self._converter = None
     
@@ -65,7 +65,7 @@ class ToolCallConverter:
 class StreamingToolCallHandler:
     """Legacy streaming handler - now delegates to modular system"""
     
-    def __init__(self, model_name: str = None):
+    def __init__(self, model_name: Optional[str] = None):
         self.model_name = model_name
         self._handler = None
     
@@ -90,11 +90,11 @@ class StreamingToolCallHandler:
 class ProxyHandler:
     """Handles proxy requests to backend API"""
     
-    def __init__(self, backend_url: str = None):
+    def __init__(self, backend_url: Optional[str] = None):
         self.backend_url = backend_url or config.backend_url
         # Model-specific converter will be determined per request
     
-    def forward_request(self, path: str, stream: bool = False, convert_tool_calls: bool = False) -> Response:
+    def forward_request(self, path: str, stream: bool = False, convert_tool_calls: bool = False):
         """Forward request to backend and handle response"""
         try:
             # Prepare request
