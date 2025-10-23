@@ -17,7 +17,7 @@ class ConverterFactory:
     
     def __init__(self):
         # Register available converters (order matters – most specific first)
-        self._converters = [
+        self._converters: List[ToolCallConverter] = [
             # Coder comes first, the match is more specific
             Qwen3CoderToolCallConverter(),
             # Generic Qwen3 converter for XML-wrapped JSON calls
@@ -91,9 +91,14 @@ class ConverterFactory:
     
     def list_supported_models(self) -> List[str]:
         """List all supported model patterns"""
+        # I mean, I _hate_ this.
         supported = []
         for converter in self._converters:
-            if hasattr(converter, 'GLM_MODEL_PATTERNS'):
+            if hasattr(converter, 'QWEN3_CODER_MODEL_PATTERNS'):
+                supported.extend(converter.QWEN3_CODER_MODEL_PATTERNS)
+            elif hasattr(converter, 'QWEN3_MODEL_PATTERNS'):
+                supported.extend(converter.QWEN3_MODEL_PATTERNS)
+            elif hasattr(converter, 'GLM_MODEL_PATTERNS'):
                 supported.extend(converter.GLM_MODEL_PATTERNS)
             elif hasattr(converter, 'OPENAI_MODEL_PATTERNS'):
                 supported.extend(converter.OPENAI_MODEL_PATTERNS)
