@@ -4,6 +4,8 @@
 
 A Flask-based proxy server that enables seamless integration of AI models with different tool call formats by automatically converting them to OpenAI's standard format. Perfect for using models like GLM with OpenAI-compatible clients.
 
+I don't do vibe coding, generally, but this seemed like a decent place to get my feet wet. I've added Qwen3-Coder and Qwen3 parsing through codex and GPT-OSS-20B. It'll also pick up the .env file which is nice.
+
 ## ✨ Features
 
 - **🔄 Automatic Tool Call Conversion**: Converts model-specific tool call formats (like GLM's `<tool_call>` syntax) to OpenAI's standard format
