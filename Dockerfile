@@ -1,5 +1,8 @@
 FROM python:3.11-slim
 
+# Environment variables matching defaults in config.py
+ENV FLASK_ENV=production
+
 # Install runtime dependencies
 COPY requirements.txt /app/requirements.txt
 RUN pip install --no-cache-dir -r /app/requirements.txt

@@ -1,5 +1,9 @@
+__pycache__
+.venv
+venv
 **/test_*.py
 run_test.py
 simple_test.py
 debug_*.py
 lmstudio-tooluse-test.py
+.env*
