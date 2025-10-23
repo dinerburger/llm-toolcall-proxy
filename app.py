@@ -5,6 +5,9 @@ Supports both streaming and non-streaming requests
 Handles tool call format conversion from GLM to standard format
 """
 
+from dotenv import load_dotenv
+load_dotenv()
+
 import json
 import re
 import logging
