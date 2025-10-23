@@ -8,18 +8,21 @@ from .base import ToolCallConverter, StreamingToolCallHandler, PassThroughConver
 from .glm import GLMToolCallConverter, GLMStreamingHandler
 from .openai import OpenAIToolCallConverter, OpenAIStreamingHandler
 from .claude import ClaudeToolCallConverter, ClaudeStreamingHandler
+from .qwen3_coder import Qwen3CoderToolCallConverter, Qwen3CoderStreamingHandler
 
 
 class ConverterFactory:
     """Factory class for creating model-specific tool call converters"""
     
     def __init__(self):
-        # Register available converters (order matters - most specific first)
+        # Register available converters (order matters – most specific first)
         self._converters = [
+            Qwen3CoderToolCallConverter(),
             GLMToolCallConverter(),
             OpenAIToolCallConverter(),
             ClaudeToolCallConverter(),
-            PassThroughConverter(),  # Fallback - should be last
+            # Register Qwen3 Coder after the known converters
+            PassThroughConverter(),  # Fallback – should be last
         ]
     
     def get_converter(self, model_name: str) -> ToolCallConverter:
@@ -39,7 +42,9 @@ class ConverterFactory:
         converter = self.get_converter(model_name)
         
         # Return model-specific streaming handler if available
-        if isinstance(converter, GLMToolCallConverter):
+        if isinstance(converter, Qwen3CoderToolCallConverter):
+            return Qwen3CoderStreamingHandler()
+        elif isinstance(converter, GLMToolCallConverter):
             return GLMStreamingHandler()
         elif isinstance(converter, OpenAIToolCallConverter):
             return OpenAIStreamingHandler()
