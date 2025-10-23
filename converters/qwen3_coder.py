@@ -31,7 +31,7 @@ from config import Config
 class Qwen3CoderToolCallConverter(ToolCallConverter):
     """Convert Qwen3 Coder tool calls to the standard OpenAI format."""
 
-    QWEN3_CODER_MODEL_PATTERNS = [r".*qwen3[-_]coder.*"]
+    QWEN3_CODER_MODEL_PATTERNS = [r".*qwen3[-_]coder.*", r".*kat[-_]dev.*"]
 
     def __init__(self):
         self.config = Config()
