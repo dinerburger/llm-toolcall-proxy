@@ -21,12 +21,14 @@ The converter transforms the above into an OpenAI‑compatible tool call.
 """
 
 import json
+import logging
 import re
 from typing import Dict, Any, List
 
 from .base import ToolCallConverter, StreamingToolCallHandler
 from config import Config
 
+logger = logging.getLogger(__name__)
 
 class Qwen3CoderToolCallConverter(ToolCallConverter):
     """Convert Qwen3 Coder tool calls to the standard OpenAI format."""
@@ -42,6 +44,7 @@ class Qwen3CoderToolCallConverter(ToolCallConverter):
         return any(re.match(p, model_name.lower()) for p in self.QWEN3_CODER_MODEL_PATTERNS)
 
     def parse_tool_calls(self, content: str) -> List[Dict[str, Any]]:
+        logger.debug("PARSING: " + content)
         tool_calls: List[Dict[str, Any]] = []
         # Find all <tool_call>...</tool_call> blocks.
         for i, block in enumerate(re.findall(r"<tool_call>(.*?)</tool_call>", content, re.DOTALL)):
@@ -75,10 +78,16 @@ class Qwen3CoderToolCallConverter(ToolCallConverter):
 
     def has_partial_tool_call(self, content: str) -> bool:
         markers = ["<tool_call>", "</tool_call>", "<function=", "</function>", "<parameter=", "</parameter>"]
-        return any(m in content for m in markers)
+        result = any(m in content for m in markers)
+        # logger.debug(f"HAS_PARTIAL({result}): {content}")
+        return result
+
 
     def is_complete_tool_call(self, content: str) -> bool:
-        return bool(re.search(r"<tool_call>.*?</tool_call>", content, re.DOTALL))
+        result = bool(re.search(r"<tool_call>(.*?)</tool_call>", content, re.DOTALL))
+        # logger.debug(f"IS_COMPLETE({result}): {content}")
+        return result
+
 
     def _clean_content(self, content: str) -> str:
         # Remove all <tool_call> blocks.
@@ -88,6 +97,8 @@ class Qwen3CoderToolCallConverter(ToolCallConverter):
         content = re.sub(r"</parameter>", "", content)
         if self.config.REMOVE_THINK_TAGS:
             content = re.sub(r"<think>.*?</think>", "", content, flags=re.DOTALL)
+        else:
+            logger.debug(f"Keeping complete <think>...</think> pairs (REMOVE_THINK_TAGS=false)")
         content = self._remove_orphaned_think_tags(content)
         return content.strip()
 

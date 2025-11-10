@@ -105,7 +105,7 @@ class ProxyHandler:
             # Forward request with appropriate timeout
             timeout = config.STREAMING_TIMEOUT if stream else config.REQUEST_TIMEOUT
             
-            print(f"[DEBUG] Making {'streaming' if stream else 'regular'} request with timeout: {timeout}")
+            # print(f"[DEBUG] Making {'streaming' if stream else 'regular'} request with timeout: {timeout}")
             
             response = requests.request(
                 method=request.method,
@@ -117,8 +117,10 @@ class ProxyHandler:
             )
             
             if stream:
+                logger.debug(f"Forwarding streaming request to {path}")
                 return self._handle_streaming_response(response, convert_tool_calls)
             else:
+                logger.debug(f"Forwarding nonstreaming request to {path}")
                 return self._handle_regular_response(response, convert_tool_calls)
                 
         except Exception as e:
@@ -199,13 +201,16 @@ class ProxyHandler:
                                 
                         except json.JSONDecodeError:
                             # Pass through non-JSON data with proper SSE format
+                            logger.debug(f"JSON decode error found in streaming path; passing non-JSON data: {decoded_line}")
                             yield f"{decoded_line}\n\n"
                     else:
                         # Pass through non-data lines (comments, etc.) with proper format
+                        logger.debug(f"Non-data line found: {decoded_line}")
                         yield f"{decoded_line}\n\n"
             else:
                 # Simple passthrough for non-tool-call streaming
                 # Ensure proper SSE format is maintained
+                logger.debug(f"Handling simple passthrough for {response.url}")
                 for line in response.iter_lines(decode_unicode=False):
                     if not line:
                         # Keep empty lines for proper SSE format
@@ -239,6 +244,11 @@ class ProxyHandler:
 # Initialize proxy handler
 proxy = ProxyHandler()
 
+@app.route('/health', methods=['GET'])
+def health():
+    """Health check endpoint"""
+    return jsonify({"status": "healthy", "service": "chat-proxy"})
+
 @app.route('/chat/completions', methods=['POST'])
 @app.route('/v1/chat/completions', methods=['POST'])
 def chat_completions():
@@ -256,11 +266,6 @@ def chat_completions():
     except Exception as e:
         logger.error(f"Chat completions error: {e}")
         return jsonify({"error": "Request processing failed"}), 500
-
-@app.route('/health', methods=['GET'])
-def health():
-    """Health check endpoint"""
-    return jsonify({"status": "healthy", "service": "chat-proxy"})
 
 @app.route('/v1/completions', methods=['POST'])
 def completions():

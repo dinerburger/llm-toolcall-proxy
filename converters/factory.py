@@ -3,6 +3,7 @@
 Factory for creating appropriate tool call converters based on model
 """
 
+import logging
 from typing import Dict, Any, Optional, List
 from .base import ToolCallConverter, StreamingToolCallHandler, PassThroughConverter
 from .glm import GLMToolCallConverter, GLMStreamingHandler
@@ -11,6 +12,7 @@ from .claude import ClaudeToolCallConverter, ClaudeStreamingHandler
 from .qwen3_coder import Qwen3CoderToolCallConverter, Qwen3CoderStreamingHandler
 from .qwen3 import Qwen3ToolCallConverter, Qwen3StreamingHandler
 
+logger = logging.getLogger(__name__)
 
 class ConverterFactory:
     """Factory class for creating model-specific tool call converters"""
@@ -35,8 +37,10 @@ class ConverterFactory:
         
         for converter in self._converters:
             if converter.can_handle_model(model_name):
+                logger.debug("Returning " + type(converter).__name__)
                 return converter
         
+        logger.debug("Returning PassThroughConverter")
         # Fallback to pass-through
         return PassThroughConverter()
     

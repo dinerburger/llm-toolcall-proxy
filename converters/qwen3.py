@@ -13,12 +13,14 @@ representation used throughout the proxy.
 """
 
 import json
+import logging
 import re
 from typing import Dict, Any, List
 
 from .base import ToolCallConverter, StreamingToolCallHandler
 from config import Config
 
+logger = logging.getLogger(__name__)
 
 class Qwen3ToolCallConverter(ToolCallConverter):
     """Convert Qwen3 tool calls to the standard OpenAI format."""
@@ -77,6 +79,8 @@ class Qwen3ToolCallConverter(ToolCallConverter):
         # Handle <think> tags as the GLM converter does.
         if self.config.REMOVE_THINK_TAGS:
             content = re.sub(r"<think>.*?</think>", "", content, flags=re.DOTALL)
+        else:
+            logger.debug(f"Keeping complete <think>...</think> pairs (REMOVE_THINK_TAGS=false)")
         content = self._remove_orphaned_think_tags(content)
         return content.strip()
 
