@@ -10,6 +10,7 @@ from .glm import GLMToolCallConverter, GLMStreamingHandler
 from .openai import OpenAIToolCallConverter, OpenAIStreamingHandler
 from .claude import ClaudeToolCallConverter, ClaudeStreamingHandler
 from .qwen3_coder import Qwen3CoderToolCallConverter, Qwen3CoderStreamingHandler
+from .devstral import DevstralToolCallConverter, DevstralStreamingHandler
 from .qwen3 import Qwen3ToolCallConverter, Qwen3StreamingHandler
 
 logger = logging.getLogger(__name__)
@@ -20,10 +21,10 @@ class ConverterFactory:
     def __init__(self):
         # Register available converters (order matters – most specific first)
         self._converters: List[ToolCallConverter] = [
-            # Coder comes first, the match is more specific
+            # Specific converters first
             Qwen3CoderToolCallConverter(),
-            # Generic Qwen3 converter for XML-wrapped JSON calls
             Qwen3ToolCallConverter(),
+            DevstralToolCallConverter(),
             GLMToolCallConverter(),
             OpenAIToolCallConverter(),
             ClaudeToolCallConverter(),
@@ -53,6 +54,8 @@ class ConverterFactory:
             return Qwen3CoderStreamingHandler()
         elif isinstance(converter, Qwen3ToolCallConverter):
             return Qwen3StreamingHandler()
+        elif isinstance(converter, DevstralToolCallConverter):
+            return DevstralStreamingHandler()
         elif isinstance(converter, GLMToolCallConverter):
             return GLMStreamingHandler()
         elif isinstance(converter, OpenAIToolCallConverter):
@@ -102,6 +105,8 @@ class ConverterFactory:
                 supported.extend(converter.QWEN3_CODER_MODEL_PATTERNS)
             elif hasattr(converter, 'QWEN3_MODEL_PATTERNS'):
                 supported.extend(converter.QWEN3_MODEL_PATTERNS)
+            elif hasattr(converter, 'DEVSTRAL_MODEL_PATTERNS'):
+                supported.extend(converter.DEVSTRAL_MODEL_PATTERNS)
             elif hasattr(converter, 'GLM_MODEL_PATTERNS'):
                 supported.extend(converter.GLM_MODEL_PATTERNS)
             elif hasattr(converter, 'OPENAI_MODEL_PATTERNS'):
