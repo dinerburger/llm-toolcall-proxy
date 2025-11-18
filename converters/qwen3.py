@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 class Qwen3ToolCallConverter(ToolCallConverter):
     """Convert Qwen3 tool calls to the standard OpenAI format."""
 
-    QWEN3_MODEL_PATTERNS = [r".*qwen3.*", r".*jan[-_]nano.*"]
+    QWEN3_MODEL_PATTERNS = [r".*qwen3.*", r".*jan[-_ ]nano.*", r"aquif[-_ ]3.5"]
 
     def __init__(self):
         self.config = Config()
